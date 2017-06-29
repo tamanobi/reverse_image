@@ -1,0 +1,52 @@
+version: '3'
+services:
+    client:
+        container_name: client
+        image: ruby:2.4.1-alpine
+        volumes:
+            - ./client:/app
+            - ./data:/data
+        environment:
+            I2V_HOST: 'i2v_api'
+            I2V_PORT: 5000
+            REDIS_HOST: 'redis'
+            REDIS_PORT: 9379
+            NGT_HOST: 'ngt_api'
+            NGT_PORT: 8000
+        depends_on:
+            - ngt_api
+            - redis
+        networks:
+            - network_reverse_image
+        command: 'echo aaa'
+    i2v:
+        container_name: i2v_api
+        build:
+            context: https://github.com/tamanobi/illustration2vec_webapp.git
+        image: tamanobi/i2v_api
+        expose:
+            - "5000"
+        networks:
+            - network_reverse_image
+    ngt_api:
+        container_name: ngt_api
+        build:
+            context: https://github.com/tamanobi/ngt_webapp.git
+        image: tamanobi/ngt_api
+        networks:
+            - network_reverse_image
+    redis:
+        container_name: redis
+        image: redis
+        restart: always
+        volumes:
+          - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+          - ./redis/data:/data
+        expose:
+          - "6379"
+        networks:
+            - network_reverse_image
+        command: redis-server --appendonly yes
+
+networks:
+    network_reverse_image:
